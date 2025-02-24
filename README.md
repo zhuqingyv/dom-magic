@@ -1,6 +1,7 @@
 # dom-magic
 
-无需任何打包工具，即可在html中编写响应式的移动web应用，并且拥有非常简洁的语法以及极佳的性能体验。
+无需任何打包工具，即可在html中编写**响应式**的移动web应用，并且拥有非常简洁的语法以及极佳的性能体验。
+在这里没有 `JSX`，没有 `Vue Template` ，这里只有纯粹的 **Javascript** ！
 
 ## Example
 
@@ -221,4 +222,130 @@ div.onclick(clickHandler)();
 setClickHandler(() => { console.log('New Handler') }); // 这将改变元素的点击的回调函数
 ```
 
-## 使用useEffect
+## 组件
+
+当然，这里也有组件的概念，方便逻辑以及视图服复用。这里的组件仅仅是通过函数将内部Dom结构拼接在一起。例如下面的两种情况是等价的。
+
+```javascript
+// 第一种写法
+const ComponentA = () => {
+  return (
+    div.class('a-container')()
+  )
+};
+div(ComponentA())
+
+// 第二种写法
+div((() => {
+  return  div.class('a-container')()
+})())
+
+```
+
+```javascript
+import { domMagic, useSignal, useComputed, useEffect, Hook, render } from 'dom-magic'
+const { div, span, button } = domMagic;
+
+const ComponentA = (_count) => {
+  const count = useComputed(_count, () => {
+    return `count: ${count()}`
+  })
+  return (
+    div.class('a-container')(
+      span(count),
+    )
+  )
+};
+
+const ComponentB = () =>  {
+  const [count, setCount] = useSignal(0);
+
+  const onChangeCount = () => {
+    setCount(count() + 1);
+  }
+
+  return (
+    div.class('b-container')(
+      ComponentA(count),
+      button.class('b-button').onclick(onChangeCount)
+    )
+  )
+};
+
+```
+
+## 渲染
+
+同样是上面的场景，我们只需要调用 `render` 即可将组件渲染到指定的Dom节点上。
+这里值得注意的是，这里不同于React的Hooks，数据每次更新，并不会触发整个函数的重新执行，而是仅仅触发响应式数据的变更，Dom的变更往往也是点对点的订阅以及响应。
+原因是在元素递归执行的过程中，magic会自行收集动态数据依赖，也就意味着这个过程中顺便筛选掉了永远不会变的元素，后续的变更只会影响动态元素。
+很多时候，这也避免了大量的Diff工作。
+
+```javascript
+import { domMagic, useSignal, useComputed, useEffect, Hook, render } from 'dom-magic'
+const { div, span, button } = domMagic;
+
+const ComponentA = (_count) => {
+  const count = useComputed(_count, () => {
+    return `count: ${count()}`
+  })
+  return (
+    div.class('a-container')(
+      span(count),
+    )
+  )
+};
+
+const ComponentB = () =>  {
+  const [count, setCount] = useSignal(0);
+
+  const onChangeCount = () => {
+    setCount(count() + 1);
+  }
+
+  return (
+    div.class('b-container')(
+      ComponentA(count),
+      button.class('b-button').onclick(onChangeCount)
+    )
+  )
+};
+
+render(document.body, ComponentB);
+
+```
+
+## 注释
+
+因为整体都是基于Javascript的语法进行设计的，所以即使是Dom结构，也可以像Javascript一样写注释。
+
+```javascript
+const ComponentA = (_count) => {
+  const count = useComputed(_count, () => {
+    return `count: ${count()}`
+  })
+  return (
+    div.class('a-container')( // A组件外包围盒子
+      span(count), // 这里即将响应count的变更
+    )
+  )
+};
+
+const ComponentB = () =>  {
+  const [count, setCount] = useSignal(0);
+
+  const onChangeCount = () => {
+    setCount(count() + 1);
+  }
+
+  return (
+    div.class('b-container')( // 最外围包围盒
+      ComponentA(count), // 显示变更的子组件
+      button.class('b-button').onclick(onChangeCount) // 点击按钮
+    )
+  )
+};
+
+render(document.body, ComponentB);
+
+```
