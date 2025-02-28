@@ -1,0 +1,24 @@
+/* 默认主题 */
+.hljs-container {
+  background: #f8f8f8;
+  padding: 1em;
+  border-radius: 4px;
+  font-family: 'Fira Code', monospace;
+}
+
+/* 语法类型配色 */
+.hljs-comment-block { color: #999988; font-style: italic; }
+.hljs-comment-line { color: #999988; }
+.hljs-string { color: #d14; }
+.hljs-regex { color: #009926; }
+.hljs-number { color: #0086b3; }
+.hljs-class-name { color: #6f42c1; font-weight: bold; }
+.hljs-class-keyword { color: #d73a49; }
+.hljs-function-def { color: #6f42c1; text-decoration: underline; }
+.hljs-function-call { color: #6f42c1; }
+.hljs-declaration { color: #d73a49; font-weight: bold; }
+.hljs-module-keyword { color: #d73a49; }
+.hljs-control-flow { color: #d73a49; font-weight: bold; }
+.hljs-type-primitive { color: #445588; }
+.hljs-operator-arithmetic { color: #a71d5d; }
+.hljs-jsx-tag { color: #22863a; }

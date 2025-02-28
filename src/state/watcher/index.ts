@@ -36,7 +36,7 @@ export class DeepWatcher<R = unknown, T = unknown> {
 
   static readonly isBaseDataType (data: any) {
     if (typeof data === 'string' || typeof data === 'number' || typeof data === 'boolean' || typeof data === 'bigint' || typeof data === 'symbol' || data === null || data === undefined) return true;
-  };
+  }
 
   static readonly getValueOfKey(target: any, key: string | symbol): any {
     try {
@@ -185,7 +185,7 @@ export class DeepWatcher<R = unknown, T = unknown> {
     const proxy = new DeepWatcher<T, T>(this.rootTarget, target, this.callback, DeepWatcher.getNewPath(this.path, key));
     DeepWatcher.proxyMap.set(target, proxy);
     return proxy;
-  };
+  }
 
   private readonly getValueWithComputed = (computed: ComputedCallback<T>) => {
     if (computed && computed instanceof Function) return computed(this.target);
