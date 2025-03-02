@@ -20,7 +20,11 @@ export const ARRAY_MUTATION_METHODS: ArrayMutationMethods = {
   sort: Array.prototype.sort,
   reverse: Array.prototype.reverse
 } as const;
+
 /**
  * 用以识别通用操作
 */
 export const BASE_DATE_TYPE_METHODS = ['set'] as const;
+
+// 订阅
+export const BIND_METHODS = ['___bind', '___unbind'];

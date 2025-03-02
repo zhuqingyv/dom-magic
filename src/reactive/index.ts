@@ -1,12 +1,12 @@
-import { ARRAY_MUTATION_METHODS, BASE_DATE_TYPE_METHODS } from './const';
-import { Reactive as TargetType, PathType, CreateHendlerType } from './types';
+import { ARRAY_MUTATION_METHODS, BASE_DATE_TYPE_METHODS, BIND_METHODS } from './const';
+import { Reactive as TargetType } from './types';
 
-let status: boolean = false;
+const REACTIVE_PROXY = Symbol('REACTIVE_PROXY');
 
 class ReactiveBase {
   static readonly contextMap = new WeakMap<object, Reactive<any>>;
 
-  static readonly initTarget = <T>(target: T) => {
+  static readonly initTarget = <T>(target: T): T extends object ? T : { value: T } => {
     return (
       typeof target === "object" && target !== null
         ? target
@@ -14,8 +14,8 @@ class ReactiveBase {
     ) as T extends object ? T : { value: T };
   };
 
-  static readonly createProxy = <T extends object>(target: TargetType<T>, createHandler: CreateHendlerType<TargetType<T>>): TargetType<T> => {
-    return new Proxy(target, createHandler()) as TargetType<T>;
+  static readonly createProxy = <T extends object>(target: T, createHandler: () => ProxyHandler<T>): T => {
+    return new Proxy(target, createHandler()) as T;
   };
 
   static readonly createContext = <T extends object>(target: T, path: (string | symbol | number)[], parent: Reactive<any> | null): Reactive<T> => {
@@ -28,7 +28,7 @@ class ReactiveBase {
     return value !== null && (typeof value === 'object' || typeof value === 'function');
   };
 
-  static readonly isCallback = (callback: any) => {
+  static readonly isCallback = (callback: unknown): callback is Function => {
     return typeof callback === 'function';
   };
 
@@ -42,7 +42,6 @@ class ReactiveBase {
 
   static readonly isBaseDataTypeMethod = (method: string | symbol | number): method is typeof BASE_DATE_TYPE_METHODS[number] => {
     if (typeof method !== 'string') return false;
-    // 通过 Array.prototype.includes 的类型重载
     return (BASE_DATE_TYPE_METHODS as readonly string[]).includes(method);
   }
 
@@ -54,7 +53,7 @@ class ReactiveBase {
     return path.concat(Number(key));
   };
 
-  static readonly getValueOfKey = (target: any, key: string | symbol | number): any => {
+  static readonly getValueOfKey = <T extends object, K extends keyof T>(target: T, key: K): T[K] => {
     try {
       return Reflect.get(target, key);
     } catch {
@@ -62,57 +61,32 @@ class ReactiveBase {
     }
   };
 
-  static readonly setValueOfKey = (target: any, key: string | symbol | number, value: any): boolean => {
+  static readonly setValueOfKey = <T extends object, K extends keyof T>(target: T, key: K, value: T[K]): boolean => {
     try {
       return Reflect.set(target, key, value);
     } catch {
-      target[key] = value;
+      try { target[key] = value; } catch { return false; }
       return true;
     }
-  };
-
-  static readonly subscribe = (getValue: () => any, callback: () => any): boolean => {
-    if (!callback) return false;
-
-    if (ReactiveBase.isObject(getValue())) {
-      const context = ReactiveBase.contextMap.get(getValue());
-      if (context) {
-        const proxy = context.proxy;
-      };
-    }
-  };
-
-  static readonly changeStatus = (_status: boolean): boolean => {
-    return status = !status;
-  };
-
-  static readonly status = () => {
-    return status;
-  };
-
-  static readonly canSubscribe = () => {
-    return status === true;
   };
 };
 
 class Reactive<T> extends ReactiveBase {
+  [REACTIVE_PROXY] = true;
   private readonly subscribers = new Set<Function>();
-  private readonly reactives = new Map<string, Reactive<any>>;
   private readonly propsProxyMap = new Map<string | number, any>;
 
   #isObject: boolean;
   #target: T extends object ? T : { value: T };
-  #path: PathType<number | string | symbol>;
-  #parent: Reactive<T> | null;
-  proxy: TargetType<T>;
+  #path: (string | symbol | number)[];
+  proxy: T;
 
   constructor(target: T, path: (string | symbol | number)[] = [], parent: (Reactive<T> | null) = null) {
     super()
     this.#target = ReactiveBase.initTarget(target);
     this.#path = path;
-    this.#parent = parent;
     this.#isObject = ReactiveBase.isObject(target);
-    this.proxy = ReactiveBase.createProxy(this.getValue, this.createHandler) as TargetType<T>;
+    this.proxy = ReactiveBase.createProxy(this.getValue, this.createHandler) as T;
   };
 
   private readonly createHandler = <T extends object>(): ProxyHandler<T> => {
@@ -124,40 +98,38 @@ class Reactive<T> extends ReactiveBase {
   };
 
   private readonly createBaseProxy = <T extends (number | string)>(key: T, state: T) => {
-    if (this.propsProxyMap.has(key)) return this.propsProxyMap.get(key);
 
-    const getValue = <F extends Function>(callback?: F, immediately = false) => {
-      // 这里执行订阅
-      if (ReactiveBase.canSubscribe() && callback && ReactiveBase.isCallback(callback)) {
-        this.subscribers.add(callback);
-        if (immediately) {
-          callback(state, state);
-        };
-        return true;
-      };
-  
+    if (this.propsProxyMap.has(key)) return this.propsProxyMap.get(key);
+    const { handleBind } = this;
+
+    const getValue = () => {
       return state;
-    }
+    };
 
     const setter = (value: T) => {
-      if (this.propsProxyMap.has(key)) {
+      if (typeof key === 'string' || typeof key === 'number') {
+        if (this.propsProxyMap.has(key)) {
+          const oldValue = state;
+          // @ts-ignore
+          ReactiveBase.setValueOfKey(this.getValue() as object, key, value);
+          const newValue = ReactiveBase.getValueOfKey(this.getValue() as object, key);
+          state = newValue;
+          this.dispatch(oldValue, newValue);
+          return newValue;
+        };
         const oldValue = state;
-        ReactiveBase.setValueOfKey(this.getValue(), key, value);
-        const newValue = ReactiveBase.getValueOfKey(this.getValue(), key);
-        state = newValue;
-        this.dispatch(oldValue, newValue);
-        return newValue;
+        state = value;
+        this.dispatch(oldValue, value);
       };
-      const oldValue = state;
-      state = value;
-      this.dispatch(oldValue, value);
-      
     };
 
     const proxy = new Proxy(getValue, {
-      get(_: any, key: string | number | symbol) {
+      get: (_: unknown, key: string | number | symbol) => {
+        if (key === REACTIVE_PROXY) return this;
         if (ReactiveBase.isBaseDataTypeMethod(key)) {
           return setter;
+        } else if (typeof key === 'string' && BIND_METHODS.includes(key)) {
+          return handleBind(key);
         };
         // @ts-ignore
         return state[key] as any;
@@ -185,16 +157,35 @@ class Reactive<T> extends ReactiveBase {
   };
 
   private readonly handleGet = (_: unknown, key: string | symbol | number) => {
-    if (ReactiveBase.isBaseDataTypeMethod(key) && !Reactive.isObject(this.getValue())) {
+    // 特殊标志符号，用于识别是否为响应式数据
+    if (key === REACTIVE_PROXY) return this;
+    // 绑定操作
+    if (key === '___bind') {
+      return this.___bind;
+    }
+    if (key === '___unbind') {
+      return this.___unbind;
+    }
+    // 基础操作
+    if (ReactiveBase.isBaseDataTypeMethod(key)) {
       return this.handleSetSelf;
     }
+    // 数组操作
     else if (Array.isArray(this.#target) && typeof key === 'string' && ReactiveBase.isArrayMutationMethod(key)) {
       return this.createArrayMethodProxy(this.#target, key);
     }
+    // 内置属性
+    else if (typeof key === 'symbol' || (typeof key === 'string' && key.startsWith('__'))) {
+      return Reflect.get(this.getValue(), key);
+    }
+    // 属性获取
     else {
-      const value = ReactiveBase.getValueOfKey(this.#target, key);
+      const value = ReactiveBase.getValueOfKey(
+        this.getValue() as object,
+        key as string | number | symbol
+      );
       // 非对象返回代理
-      if (!ReactiveBase.isObject(value)) return this.createBaseProxy(key, value);
+      if (!ReactiveBase.isObject(value)) return this.createBaseProxy(key as string | number, value);
 
       const path = ReactiveBase.getNewPath(this.#path, key);
       const reactive = ReactiveBase.createContext(value, path, this);
@@ -203,66 +194,74 @@ class Reactive<T> extends ReactiveBase {
     };
   };
 
-  private readonly handleSet = (_: unknown, key: string | symbol | number, value: any): true => {
-    const oldValue = this.getValue()[key];
-    ReactiveBase.setValueOfKey(this.#target, key, value);
-    this.dispatch(oldValue, this.getValue()[key]);
+  private readonly handleSet = (_: unknown, key: string | symbol | number, value: unknown): true => {
+    const oldValue = (this.getValue() as any)[key];
+    ReactiveBase.setValueOfKey(this.getValue() as object, key as string | number | symbol, value as any);
+    this.dispatch(oldValue, (this.getValue() as any)[key]);
     return true;
   };
 
-  private readonly handleSetSelf = (value: any) => {
+  private readonly handleSetSelf = (value: T): T => {
     const oldValue = this.getValue();
     this.#target = ReactiveBase.initTarget(value);
     this.#isObject = ReactiveBase.isObject(value);
-    if (this.#parent) this.#parent.handleSet(null, this.#path[this.#path.length - 1], this.getValue());
     this.dispatch(oldValue, this.getValue());
-    return this.getValue();
+    return this.getValue() as T;
   };
 
   private readonly handleDelete = (_: unknown, key: string | number | symbol): boolean => {
     const oldValue = this.getValue();
-    if (!ReactiveBase.isObject(oldValue[key]) && typeof key === 'string') this.deleteBaseProxy(key);
+    if (!ReactiveBase.isObject((oldValue as any)[key]) && typeof key === 'string') this.deleteBaseProxy(key as string | number);
 
     const result = Reflect.deleteProperty(this.getValue(), key);
     this.dispatch(oldValue, this.getValue());
     return result
   };
 
-  private readonly dispatch = (oldValue: any, newValue: any) => {
-    this.subscribers.forEach(cb => cb(oldValue, newValue))
+  private readonly handleBind = (key: typeof BIND_METHODS[number]) => {
+    if (key === '___bind') return this.___bind;
+    if (key === '___unbind') return this.___unbind;
   };
 
-  // 这里获取的是真实的值
-  getValue = <F extends Function>(callback?: F, immediately = false) => {
-    // 这里执行订阅
-    if (ReactiveBase.canSubscribe() && callback && ReactiveBase.isCallback(callback)) {
-      this.subscribers.add(callback);
-      if (immediately) {
-        const value = this.getValue();
-        callback(value, value);
-      };
-      return true;
+  private readonly dispatch = (oldValue: unknown, newValue: unknown) => {
+    const subscribers = Array.from(this.subscribers);
+
+    for (let i = subscribers.length - 1; i >= 0; i--) {
+      subscribers[i](oldValue, newValue);
     };
-
-    if (this.#isObject) return this.#target;
-    // @ts-ignore
-    return this.#target?.value;
   };
-};
 
-// 开始绑定
-export const startSubscribe = (callback: any) => {
-  if (ReactiveBase.isCallback(callback)) {
-    ReactiveBase.changeStatus(true);
-    callback();
-    ReactiveBase.changeStatus(false);
+  readonly ___bind = (callback: Function) => {
+    if (ReactiveBase.isCallback(callback)) this.subscribers.add(callback);
+  };
+
+  readonly ___unbind = (callback: Function) => {
+    if (ReactiveBase.isCallback(callback)) this.subscribers.delete(callback);
+  };
+
+  getValue = (): T => {
+    if (this.#isObject) return this.#target as T;
+    return (this.#target as { value: T }).value;
   };
 };
 
 export const reactive = <T>(state: T): TargetType<T> => {
-  if (ReactiveBase.isObject(state)) {
-    return ReactiveBase.createContext(state, [], null).proxy;
-  } else {
-    return new Reactive(state, [], null).proxy;
+  if (!ReactiveBase.isObject(state)) {
+    // @ts-ignore
+    return new Reactive({ value: state }).proxy.value;
+  };
+
+  return ReactiveBase.createContext(state, [], null).proxy as TargetType<T>;
+};
+
+export const isReactive = (target: any): boolean => {
+  try {
+    const instance = target[REACTIVE_PROXY];
+    if (instance) return true;
+    return false;
+  } catch {
+    return false
   };
 };
+
+export * from './types';

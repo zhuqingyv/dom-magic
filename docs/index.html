@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOM Magic - Write UI like magic spells</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
+</head>
+<body>
+    <script src="scripts/magicBackground.js"></script>
+    <header class="header">
+        <nav class="nav-container">
+            <div class="logo">
+                <img src="images/logo.svg" alt="DOM Magic Logo">
+                <span>DOM Magic</span>
+            </div>
+            <div class="nav-links">
+                <a href="#features">特性</a>
+                <a href="#quickstart">快速开始</a>
+                <a href="#concepts">核心概念</a>
+                <a href="#patterns">高级模式</a>
+                <a href="https://github.com/yourusername/dom-magic" class="github-link">
+                    <svg height="24" viewBox="0 0 16 16" width="24">
+                        <path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                    </svg>
+                    GitHub
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="hero-content">
+                <h1>像写魔法咒语一样构建 UI</h1>
+                <p>简单，优雅，闪电般快速</p>
+                <div class="hero-buttons">
+                    <a href="#quickstart" class="primary-button">快速开始</a>
+                    <a href="#demo" class="secondary-button">查看演示</a>
+                </div>
+            </div>
+            <div class="hero-animation">
+                <div class="code-window">
+                    <div class="window-header">
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                    </div>
+                    <pre><code class="language-typescript">import { hook } from 'dom-magic';
+const { div, button } = domMagic;
+
+// 写 UI 就像写魔法咒语
+const Counter = hook(() => {
+  const count = useSignal(0);
+  
+  return div.class('counter')(
+    div(`Count: ${count()}`),
+    button.onclick(() => count.set(count() + 1))('Add')
+  );
+});
+
+// 🪄 见证魔法！
+document.body.appendChild(Counter());</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="features">
+            <h2>特性</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>极简设计</h3>
+                    <p>单遍渲染 (O(n))，超越传统虚拟 DOM (O(2n))</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✨</div>
+                    <h3>优雅语法</h3>
+                    <p>告别繁琐的 JSX，链式调用更直观</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>响应式魔法</h3>
+                    <p>深度响应，自动追踪变化</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🚀</div>
+                    <h3>轻量级</h3>
+                    <p>极致轻量，核心代码仅 2KB</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="quickstart" class="quickstart">
+            <h2>快速开始</h2>
+            <div class="code-container">
+                <div class="code-header">
+                    <span>安装</span>
+                    <button class="copy-button" data-clipboard-target="#install-code">复制</button>
+                </div>
+                <pre><code class="language-bash" id="install-code">npm install dom-magic</code></pre>
+            </div>
+            <div class="code-container">
+                <div class="code-header">
+                    <span>使用示例</span>
+                    <button class="copy-button" data-clipboard-target="#usage-code">复制</button>
+                </div>
+                <pre><code class="language-typescript" id="usage-code">// 魔法咒语
+const spell = div.class('magic')(
+  span('✨'),
+  button.onclick(cast)('Cast Spell')
+);
+
+// 响应式信号
+const power = useSignal(100);
+const level = useSignal(1);
+
+// 自动计算属性
+const powerLevel = useComputed(
+  power,
+  level,
+  (p, l) => `等级 ${l}: ${p > 9000 ? '超过 9000!' : `能量值 ${p}`}`
+);</code></pre>
+            </div>
+        </section>
+
+        <section id="demo" class="demo">
+            <h2>在线演示</h2>
+            <div class="demo-container">
+                <div id="animation-container"></div>
+            </div>
+        </section>
+
+        <section id="concepts" class="concepts">
+            <h2>核心概念</h2>
+            <div class="concepts-grid">
+                <div class="concept-card">
+                    <h3 data-icon="🪄">魔法咒语</h3>
+                    <div class="code-container">
+                        <pre><code class="language-typescript">// 每个 DOM 元素都是一个魔法咒语
+const spell = div.class('magic')(
+  span('✨'),
+  button.onclick(cast)('Cast Spell')
+);</code></pre>
+                    </div>
+                </div>
+                <div class="concept-card">
+                    <h3 data-icon="⚡">响应式信号</h3>
+                    <div class="code-container">
+                        <pre><code class="language-typescript">// 创建响应式状态
+const power = useSignal(100);
+const level = useSignal(1);
+
+// 自动计算属性
+const powerLevel = useComputed(
+  power,
+  level,
+  (p, l) => `等级 ${l}: ${p > 9000 ? '超过 9000!' : `能量值 ${p}`}`
+);</code></pre>
+                    </div>
+                </div>
+                <div class="concept-card">
+                    <h3 data-icon="🎯">组件钩子</h3>
+                    <div class="code-container">
+                        <pre><code class="language-typescript">const Wizard = hook(({ name }) => {
+  const mana = useSignal(100);
+  
+  return div.class('wizard')(
+    span(`${name} (${mana()})`),
+    button.onclick(() => mana.set(m => m + 10))('Recharge')
+  );
+});</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="patterns" class="patterns">
+            <h2>高级模式</h2>
+            <div class="patterns-grid">
+                <div class="pattern-card">
+                    <h3>条件渲染</h3>
+                    <div class="code-container">
+                        <pre><code class="language-typescript">const MagicPortal = hook(() => {
+  const isOpen = useSignal(false);
+  
+  return div.class('portal')(
+    isOpen() ? 
+      div.class('open')('✨') : 
+      div.class('closed')('🌑'),
+    button.onclick(() => isOpen.set(!isOpen()))('Toggle')
+  );
+});</code></pre>
+                    </div>
+                </div>
+                <div class="pattern-card">
+                    <h3>列表渲染</h3>
+                    <div class="code-container">
+                        <pre><code class="language-typescript">const Spellbook = hook(() => {
+  const spells = useSignal(['🔥', '❄️', '⚡️']);
+  
+  return div.class('spellbook')(
+    ...spells().map(spell => 
+      div.class('spell')(spell)
+    )
+  );
+});</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="docs" class="docs">
+            <h2>文档</h2>
+            <div class="docs-grid">
+                <div class="doc-card">
+                    <h3>基础概念</h3>
+                    <ul>
+                        <li><a href="guide/virtual-dom.html">虚拟DOM</a></li>
+                        <li><a href="guide/diff-algorithm.html">Diff算法</a></li>
+                        <li><a href="guide/dom-builder.html">DOM构建器</a></li>
+                    </ul>
+                </div>
+                <div class="doc-card">
+                    <h3>API参考</h3>
+                    <ul>
+                        <li><a href="api/diff-class.html">Diff类</a></li>
+                        <li><a href="api/dom-builder.html">DomBuilder API</a></li>
+                        <li><a href="api/hooks.html">生命周期钩子</a></li>
+                    </ul>
+                </div>
+                <div class="doc-card">
+                    <h3>高级指南</h3>
+                    <ul>
+                        <li><a href="advanced/performance.html">性能优化</a></li>
+                        <li><a href="advanced/best-practices.html">最佳实践</a></li>
+                        <li><a href="advanced/migration.html">迁移指南</a></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>DOM Magic</h4>
+                <p>轻量级虚拟DOM差异计算引擎</p>
+            </div>
+            <div class="footer-section">
+                <h4>资源</h4>
+                <ul>
+                    <li><a href="docs/index.html">文档</a></li>
+                    <li><a href="examples/index.html">示例</a></li>
+                    <li><a href="blog/index.html">博客</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>社区</h4>
+                <ul>
+                    <li><a href="https://github.com/yourusername/dom-magic">GitHub</a></li>
+                    <li><a href="https://discord.gg/dommagic">Discord</a></li>
+                    <li><a href="https://twitter.com/dommagic">Twitter</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 DOM Magic. MIT Licensed.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script>
+    <script src="scripts/main.js"></script>
+</body>
+</html> 
