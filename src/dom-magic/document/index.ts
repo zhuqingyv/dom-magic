@@ -1,4 +1,5 @@
 import { VDom } from './VDom';
+import { handerProxy } from '@base';
 
 const {
   createComment: _createComment,
@@ -6,11 +7,9 @@ const {
   createElement: _createElement
 } = document;
 
-// 创建 VDom 实例的工厂函数
-export const createElement = _createElement.bind(document);
-
-export const createComment = _createComment.bind(document);
-export const createTextNode = _createTextNode.bind(document);
+export const createElement = handerProxy(_createElement.bind(document));
+export const createComment = handerProxy(_createComment.bind(document));
+export const createTextNode = handerProxy(_createTextNode.bind(document));
 export const equallyElement = (a: Node, b: Node): boolean => {
   if (a instanceof HTMLElement && b instanceof HTMLElement) {
     return a.outerHTML === b.outerHTML;
@@ -20,4 +19,13 @@ export const equallyElement = (a: Node, b: Node): boolean => {
   }
 };
 
+export const createVNode = (tagName: string = 'div', props: any = {}, children: any[] = []) => {
+  return {
+    tagName,
+    props,
+    children
+  };
+};
+
 export { VDom };
+

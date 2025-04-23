@@ -3,16 +3,19 @@ import { childrenSetter } from "./childrenSetter";
 import { createElement } from './document';
 import { subscribe } from "./domFactory";
 import { isReactive } from "../reactive";
+import { pushVNode } from "../hook";
 
 type ElementProxy = {
   (...children: any[]): HTMLElement;
   [key: string]: (value: string | number | boolean | (() => string | number | boolean) | ((event: Event) => void)) => ElementProxy;
 };
 
-export const elementSetter = function (this: string): ElementProxy {
-  const element = createElement(this);
+export const elementSetter = function (this: { tagName: string; props: any; children: any[] }): ElementProxy {
+  const element = createElement(this.tagName);
+  pushVNode(this);
 
   const finish = (...children: any[]): HTMLElement => {
+    pushVNode(this);
     childrenSetter.bind(element)(...children);
     return element;
   };

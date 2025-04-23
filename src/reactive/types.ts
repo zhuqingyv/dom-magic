@@ -1,10 +1,9 @@
+import { SUBSCRIBE_KEY, UN_SUBSCRIBE_KEY } from './const';
 export type IsObjectType<T> = T extends object ? true : false;
 
 export type ReactivePrimitive<T> = {
   (): T;
   set: (value: T) => T;
-  ___bind: (callback: () => void) => void;
-  ___unbind: (callback: () => void) => void;
 };
 
 export type ReactiveArray<T> = {
@@ -12,8 +11,6 @@ export type ReactiveArray<T> = {
 } & {
   (): T;
   set: (value: T) => T;
-  ___bind: (callback: () => void) => void;
-  ___unbind: (callback: () => void) => void;
 };
 
 export type ReactiveObject<T> = {
@@ -26,14 +23,14 @@ export type Reactive<T> = T extends object
     } & {
       (): T;
       set: (value: T) => T;
-      ___bind: (callback: () => void) => void;
-      ___unbind: (callback: () => void) => void;
+      [SUBSCRIBE_KEY]: (callback: (oldValue: T, newValue: T) => void) => boolean;
+      [UN_SUBSCRIBE_KEY]: (callback: (oldValue: T, newValue: T) => void) => boolean;
     }
   : {
       (): T;
       set: (value: T) => T;
-      ___bind: (callback: () => void) => void;
-      ___unbind: (callback: () => void) => void;
+      [SUBSCRIBE_KEY]: (callback: (oldValue: T, newValue: T) => void) => boolean;
+      [UN_SUBSCRIBE_KEY]: (callback: (oldValue: T, newValue: T) => void) => boolean;
     };
 
 export type PathType<T extends string | symbol | number> = T[];

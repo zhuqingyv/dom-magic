@@ -27,4 +27,5 @@ export const ARRAY_MUTATION_METHODS: ArrayMutationMethods = {
 export const BASE_DATE_TYPE_METHODS = ['set'] as const;
 
 // 订阅
-export const BIND_METHODS = ['___bind', '___unbind'];
+export const SUBSCRIBE_KEY = Symbol('SUBSCRIBE_KEY');
+export const UN_SUBSCRIBE_KEY = Symbol('UN_SUBSCRIBE_KEY');

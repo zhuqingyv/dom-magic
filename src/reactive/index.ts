@@ -1,4 +1,4 @@
-import { ARRAY_MUTATION_METHODS, BASE_DATE_TYPE_METHODS, BIND_METHODS } from './const';
+import { ARRAY_MUTATION_METHODS, BASE_DATE_TYPE_METHODS, SUBSCRIBE_KEY, UN_SUBSCRIBE_KEY } from './const';
 import { Reactive as TargetType } from './types';
 
 const REACTIVE_PROXY = Symbol('REACTIVE_PROXY');
@@ -100,7 +100,6 @@ class Reactive<T> extends ReactiveBase {
   private readonly createBaseProxy = <T extends (number | string)>(key: T, state: T) => {
 
     if (this.propsProxyMap.has(key)) return this.propsProxyMap.get(key);
-    const { handleBind } = this;
 
     const getValue = () => {
       return state;
@@ -126,11 +125,9 @@ class Reactive<T> extends ReactiveBase {
     const proxy = new Proxy(getValue, {
       get: (_: unknown, key: string | number | symbol) => {
         if (key === REACTIVE_PROXY) return this;
-        if (ReactiveBase.isBaseDataTypeMethod(key)) {
-          return setter;
-        } else if (typeof key === 'string' && BIND_METHODS.includes(key)) {
-          return handleBind(key);
-        };
+        if (key === SUBSCRIBE_KEY) return this[SUBSCRIBE_KEY];
+        if (key === UN_SUBSCRIBE_KEY) return this[UN_SUBSCRIBE_KEY];
+        if (ReactiveBase.isBaseDataTypeMethod(key)) return setter;
         // @ts-ignore
         return state[key] as any;
       }
@@ -159,13 +156,9 @@ class Reactive<T> extends ReactiveBase {
   private readonly handleGet = (_: unknown, key: string | symbol | number) => {
     // 特殊标志符号，用于识别是否为响应式数据
     if (key === REACTIVE_PROXY) return this;
-    // 绑定操作
-    if (key === '___bind') {
-      return this.___bind;
-    }
-    if (key === '___unbind') {
-      return this.___unbind;
-    }
+    // 用于订阅和取消订阅
+    if (key === SUBSCRIBE_KEY) return this[SUBSCRIBE_KEY];
+    if (key === UN_SUBSCRIBE_KEY) return this[UN_SUBSCRIBE_KEY];
     // 基础操作
     if (ReactiveBase.isBaseDataTypeMethod(key)) {
       return this.handleSetSelf;
@@ -218,11 +211,6 @@ class Reactive<T> extends ReactiveBase {
     return result
   };
 
-  private readonly handleBind = (key: typeof BIND_METHODS[number]) => {
-    if (key === '___bind') return this.___bind;
-    if (key === '___unbind') return this.___unbind;
-  };
-
   private readonly dispatch = (oldValue: unknown, newValue: unknown) => {
     const subscribers = Array.from(this.subscribers);
 
@@ -231,11 +219,10 @@ class Reactive<T> extends ReactiveBase {
     };
   };
 
-  readonly ___bind = (callback: Function) => {
+  private readonly [SUBSCRIBE_KEY] = (callback: Function) => {
     if (ReactiveBase.isCallback(callback)) this.subscribers.add(callback);
   };
-
-  readonly ___unbind = (callback: Function) => {
+  private readonly [UN_SUBSCRIBE_KEY] = (callback: Function) => {
     if (ReactiveBase.isCallback(callback)) this.subscribers.delete(callback);
   };
 
@@ -262,6 +249,18 @@ export const isReactive = (target: any): boolean => {
   } catch {
     return false
   };
+};
+
+export const subscribe = <T>(target: TargetType<T>, callback: (oldValue: T, newValue: T) => void): boolean => {
+  if (!isReactive(target)) return false;
+  target[SUBSCRIBE_KEY](callback);
+  return true;
+};
+
+export const unsubscribe = <T>(target: TargetType<T>, callback: (oldValue: T, newValue: T) => void): boolean => {
+  if (!isReactive(target)) return false;
+  target[UN_SUBSCRIBE_KEY](callback);
+  return true;
 };
 
 export * from './types';

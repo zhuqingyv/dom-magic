@@ -14,6 +14,12 @@ export default defineConfig({
           'dom-magic': 'DomMagic'
         }
       }
+    },
+  },
+  resolve: {
+    alias: {
+      '@dom-magic': resolve(__dirname, 'src/main'),
+      '@base': resolve(__dirname, 'src/base'),
     }
   },
   server: {

@@ -9,11 +9,8 @@ type DOMElements = {
 };
 
 const proxyHandler: ProxyHandler<typeof domFactory> = {
-  get(_: typeof domFactory, tagName: string | symbol): DOMFactoryFunction {
+  get(_: typeof domFactory, tagName: string | symbol = 'div'): DOMFactoryFunction {
     return typeof tagName === 'string' ? domFactory(tagName) : domFactory('div');
-  },
-  apply(target: typeof domFactory, _: any, args: any[]): DOMFactoryFunction {
-    return target(args[0]);
   }
 };
 

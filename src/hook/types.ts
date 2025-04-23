@@ -1,13 +1,7 @@
-import { Reactive } from '../reactive';
+export type { Reactive as ReactiveObject } from '../reactive/types';
 
 export interface UpdateCallback {
   (): void;
-}
-
-export interface ReactiveObject<T> {
-  (): T;
-  ___bind: (callback: UpdateCallback) => void;
-  ___unbind: (callback: UpdateCallback) => void;
 }
 
 // 定义Props接口
@@ -25,4 +19,17 @@ export type HookComponent<P extends Props = Props> = {
 export type PropFunction = {
   (...args: any[]): any;
   render: (children?: any[]) => HTMLElement | null;
+};
+
+export enum HookStatus {
+  INIT = 'init',
+  UPDATE = 'update',
+};
+
+export type VDomType = {
+  tagName: string;
+  propss: object;
+  events: {
+    [key: string]: (event: Event) => void;
+  }
 };
